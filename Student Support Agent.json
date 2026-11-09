@@ -1,0 +1,664 @@
+{
+  "name": "Student Support Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Student Help Request",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name"
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Question",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9bb79a3e-b32c-4edc-8204-0976a2d82ea0",
+      "name": "On form submission",
+      "webhookId": "2e59d38a-ab8f-4e26-99bf-7300295cb625"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=     Student question: {{ $json.Question }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "     You are a UT Dallas student support assistant.\n\nALWAYS search the utd_knowledge_base tool before answering.\nAnswer ONLY using information found in the knowledge base.\nNever invent phone numbers, dates, deadlines, emails, or URLs.\nIf the knowledge base does not contain the answer, say that a staff member will follow up.\n\nClassify the question into exactly one category: Advising, Financial Aid, IT Support, Housing, or Other.\nRespond with a category and a reply.\n\nNever mention the knowledge base or tools in your reply to the student.\n\nSet needs_review to true if the knowledge base does not contain the answer or the category is Other. Otherwise set it to false.\n\nWrite in plain text only. Do not use markdown, bold, or asterisks."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "7f3f8455-88af-424f-b773-2599c18ddb41",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        208
+      ],
+      "id": "c5c9c4a8-7f7a-495f-81a7-f86b32b0d988",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "bSEMZwuCjgBa4nU5",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"category\": \"IT Support\",\n  \"reply\": \"You can reset your NetID password using the OIT NetID Self-Service portal.\",\n  \"needs_review\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        400,
+        208
+      ],
+      "id": "f819cc44-761c-4323-ad3a-b5734629c41f",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9951156a-22b2-48a3-9c6c-09192928a96f",
+              "name": "text",
+              "value": "[IT SUPPORT] Source: https://oit.utdallas.edu/netid/ and https://utdallas.libanswers.com/faq/145887  - If you can't get past the NetID login page, contact the OIT Help Desk at (972) 883-2911, or use the OIT NetID Self-Service portal to reset your password (works from a mobile device).  - The NetID Self-Service page lets students reset or update their password to regain account access.   [FINANCIAL AID] Source: https://finaid.utdallas.edu (Home and Deadlines pages) - The 2027-2028 FAFSA is open. Fall 2027 / Spring 2028 priority deadline: January 15, 2027 for state aid recipients, new freshmen, new transfer, and new graduate students; March 15, 2027 for continuing students. - Fall 2026 / Spring 2027 priority deadlines were January 15, 2026 (state aid and new students) and March 15, 2026 (continuing students). - Summer 2027 priority deadline: March 31, 2027. Summer 2028: March 31, 2028. - To meet the priority deadline, submit a valid FAFSA (or TASFA if not eligible for federal aid) with results received by UT Dallas. Submit at least two weeks early. Students must be admitted to or enrolled in a degree-seeking program. - Check the Orion \"To Do List\" / Tasks tile regularly for additional document requests. - After the priority deadline, students can still apply but should submit at least three weeks before the end of the term. Late applicants may miss some aid programs but can still be considered for Federal Pell Grants and Direct Loans. - Aid begins disbursing on or near the first day of classes and won't show on the Bursar bill until disbursed. - Contact: financial-aid@utdallas.edu, 972-883-2941. Hours: Mon-Thu 9 AM-5 PM, Fri 10 AM-5 PM. FAFSA school code: 009741.  [HOUSING] Source: https://housing.utdallas.edu (Home and Housing Offices pages) - University Housing Office: Andromeda Hall, 955 N Loop Rd., phone 972-883-7430, email housing@utdallas.edu. Hours: Mon-Fri 8 a.m.-5 p.m. - University Village Housing Office: 2800 Waterview Pkwy Ste. 200, phone 972-883-7300. - Maintenance requests can be submitted online through the MyHousing portal, or by phone or walk-in. Emergency maintenance must be reported in person or by calling the resident's building office. - Spring-only housing applications open October 1, 2026 in MyHousing. - First-year housing priority deadline: April 1, 2027.   [ADVISING] Source: https://catalog.utdallas.edu (Undergraduate Policies and Minors pages)  - Students must declare a major by the time they become juniors so that advising is handled by advisors in their school. ",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1392,
+        256
+      ],
+      "id": "fbb40f07-cbed-42cd-baf6-830d7b30d9dd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        464
+      ],
+      "id": "37b9d8e0-10ed-4a31-9ac6-c7bdac662e25",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "bSEMZwuCjgBa4nU5",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1712,
+        464
+      ],
+      "id": "86df2cb9-4d31-4df5-b314-c314fe15f213",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 500,
+        "chunkOverlap": 50,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        672
+      ],
+      "id": "0753132c-409b-4fb2-8c91-7eef37e96bc0",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Official UT Dallas information about IT support, financial aid, housing, and advising. Use this to look up facts before answering any student question.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "utd_kb",
+          "mode": "list",
+          "cachedResultName": "utd_kb"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        352
+      ],
+      "id": "d0a91b42-5eb5-4f9c-a8e6-95f9a0d794b0",
+      "name": "utd_knowledge_base"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        304,
+        560
+      ],
+      "id": "3d6f808f-38c0-4e49-a228-a2434a2216f4",
+      "name": "Embeddings Google Gemini1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "bSEMZwuCjgBa4nU5",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1a6kX6mDH8aJQcnu1OWweU6tCq9iYW_BQcgH4k7A1h9Y",
+          "mode": "list",
+          "cachedResultName": "Student Support Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1a6kX6mDH8aJQcnu1OWweU6tCq9iYW_BQcgH4k7A1h9Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1a6kX6mDH8aJQcnu1OWweU6tCq9iYW_BQcgH4k7A1h9Y/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toFormat('yyyy-MM-dd HH:mm') }}",
+            "Name": "={{ $('On form submission').item.json.Name }}",
+            "Email": "={{ $('On form submission').item.json.Email }}",
+            "Question": "={{ $('On form submission').item.json.Question }}",
+            "Category": "={{ $json.output.category }}",
+            "Reply": "={{ $json.output.reply }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Question",
+              "displayName": "Question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Reply",
+              "displayName": "Reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        592,
+        0
+      ],
+      "id": "1eb7e867-2c8f-438c-bb3d-58c669b394ab",
+      "name": "Log Ticket",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "J2T3Lkmv0MDJQm3D",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f12bba18-affb-45a5-955f-6aba945991cd",
+              "leftValue": "={{ $('AI Agent').item.json.output.needs_review }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        816,
+        0
+      ],
+      "id": "4bda6d85-e2b8-44e6-af8b-3b41c0f61962",
+      "name": "Needs Review?"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1a6kX6mDH8aJQcnu1OWweU6tCq9iYW_BQcgH4k7A1h9Y",
+          "mode": "list",
+          "cachedResultName": "Student Support Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1a6kX6mDH8aJQcnu1OWweU6tCq9iYW_BQcgH4k7A1h9Y/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1604293304,
+          "mode": "list",
+          "cachedResultName": "Needs Review",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1a6kX6mDH8aJQcnu1OWweU6tCq9iYW_BQcgH4k7A1h9Y/edit#gid=1604293304"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toFormat('yyyy-MM-dd HH:mm') }}",
+            "Name": "={{ $('On form submission').item.json.Name }}",
+            "Email": "={{ $('On form submission').item.json.Email }}",
+            "Question": "={{ $('On form submission').item.json.Question }}",
+            "Category": "={{ $('AI Agent').item.json.output.category }}",
+            "Reply": "={{ $('AI Agent').item.json.output.reply }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Question",
+              "displayName": "Question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reply",
+              "displayName": "Reply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        -96
+      ],
+      "id": "5327b579-a7e2-4012-9dac-4c7253242257",
+      "name": "Add to Review Queue",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "J2T3Lkmv0MDJQm3D",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.Email }}",
+        "subject": "=Re: Your UTD support request ({{ $('AI Agent').item.json.output.category }})",
+        "message": "=  <p>Hi {{ $('On form submission').item.json.Name }},</p>   <p>{{ $('AI Agent').item.json.output.reply }}</p>   <p>– UTD Student Support (automated assistant)</p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        96
+      ],
+      "id": "5b55fff3-366c-4e4d-b798-b5b0a2492c0c",
+      "name": "Email Student",
+      "webhookId": "9a88bead-c9ab-4733-a047-04d833f439c4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gRIbLjsBLTXDbOH4",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        496
+      ],
+      "id": "68b7a688-20a6-4ebb-b547-639439158015",
+      "name": "Load Knowledge Base"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "value": "utd_kb",
+          "mode": "list"
+        },
+        "clearStore": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        1568,
+        256
+      ],
+      "id": "54ff93d8-6c9b-4297-95bc-08a8e6960da5",
+      "name": "Store Knowledge Base"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Log Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Store Knowledge Base",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Store Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Store Knowledge Base",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "utd_knowledge_base": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "utd_knowledge_base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Ticket": {
+      "main": [
+        [
+          {
+            "node": "Needs Review?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Review?": {
+      "main": [
+        [
+          {
+            "node": "Add to Review Queue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email Student",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Knowledge Base": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "93ffbc1a-dfe2-4147-9a54-eccb55e7f494",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8ff6aa1f3e097dac6e6f9006b1170625caa7f28e19dda42b8371a33744479595"
+  },
+  "nodeGroups": [],
+  "id": "Ue0fjj1Rv9mQnWaV",
+  "tags": []
+}
